@@ -39,11 +39,6 @@ def nlp_handle_or(string)
   else
     handle_verbs(splitted)
   end
-
-  # need another method to handle vebs with adverbs
-
-  # just do "go with the Nth option" if words separated by 'or'
-  # are not simple verbs or nouns or not the same POS at all
 end
 
 def handle_nouns(strings)
