@@ -1,15 +1,7 @@
 require 'engtagger'
 
-# WORDS_TO_REJECT = ['should', 'i']
-
-
-# def keep_essential_words(string)
-#   string.split(" ").reject { |word| WORDS_TO_REJECT.include?(word) }.join(" ")
-# end
-
 def naive_parse(string)
   string = keep_alphanum(string)
-  #essence = keep_essential_words(no_punctuation)
   naive_handle_or(string).sample if string.include?(" or ")
 end
 
