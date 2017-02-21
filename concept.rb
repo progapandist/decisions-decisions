@@ -1,31 +1,69 @@
 require 'engtagger'
+require 'nori'
+
+def parse_pos_tags(string)
+  tgr = EngTagger.new
+  prs = Nori.new
+  tagged = tgr.add_tags(string)
+  result = {}
+  tagged.split.each do |word|
+    parsed = prs.parse(word)
+    pos = parsed.keys.first
+    if result.key?(pos)
+      result[pos] << parsed.values.first
+    else
+      result[pos] = [parsed.values.first]
+    end
+  end
+  result
+end
+
+def remove_modals(string)
+  parsed = parse_pos_tags(string)
+
+  return string if !parsed.key?("md")
+
+  string.split.map do |w|
+    if parsed['md'].flatten.include?(w)
+       nil
+     else w
+    end
+  end.compact.join(" ")
+end
 
 def naive_parse(string)
   string = keep_alphanum(string)
   naive_handle_or(string).sample if string.include?(" or ")
 end
 
-def keep_alphanum(string)
-  string.gsub(/[^0-9a-z ]/i, '')
+def normalize(string)
+  alphanum = string.gsub(/[^0-9a-z ]/i, '')
+  arr = alphanum.split
+  arr[0] = arr.first.downcase
+  arr.join(" ")
 end
 
 def naive_handle_or(string)
   string.split(" or ").map do |part|
     part.strip
-    part.split(' ').last
+    part.split.last
   end
 end
 
+# TODO: REMOVE MODAL AND PRONOUNS AUTOMATICALLY
+# TODO: RECOGNIZE SEMICOLON
+
 def nlp_parse(string)
-  string = keep_alphanum(string)
+  normalized = normalize(string)
   #essence = keep_essential_words(no_punctuation)
-  nlp_handle_or(string) if string.include?(" or ")
+  nlp_handle_or(normalized) if normalized.include?(" or ")
 end
 
 def nlp_handle_or(string)
-  splitted = string.split(" or ")
+  p demodalized = remove_modals(string)
+  splitted = demodalized.split(" or ")
 
-  # take an easy way if there's there are no phrases at all
+  # take an easy way if there are no phrases at all. TODO: rewrite in better style?
   if string.gsub(" or ", " ").split.size == (string.scan(/(?= or )/).count + 1)
     return splitted
   end
@@ -44,7 +82,7 @@ end
 def handle_nouns(strings)
   # this handles nouns with adjectives/adverbs just fine
   strings.map do |part|
-    reversed = part.split(" ").reverse
+    reversed = part.split.reverse
     main_word = [reversed.first]
     rest = reversed[(1..-1)]
     adj_adv = []
@@ -55,13 +93,17 @@ def handle_nouns(strings)
   end
 end
 
+# TODO: rewrite compliment logic to use any nouns and pronouns too
 def handle_verbs(strings)
   # handle verb + adv/adj pair
   strings.map do |part|
     verb = find_verb(part)
-    splitted = part.split(" ")
+    splitted = part.split
     compliment = splitted[splitted.index(verb) + 1]
-    if has_adverbs(compliment) || has_adjectives(compliment)
+    # TODO: that shit is kind of fucked up
+    if !compliment
+      verb
+    elsif has_adverbs(compliment) || has_adjectives(compliment)
       verb + " " + compliment
     else
       verb
@@ -88,7 +130,7 @@ def detect_pos(strings)
 end
 
 def find_verb(string)
-  string = string.split(" ").map { |w| "to " + w }.join(" ")
+  string = string.split.map { |w| "to " + w }.join(" ")
   tgr = EngTagger.new
   tagged = tgr.add_tags(string)
   tgr.get_verbs(tagged).keys.first
@@ -103,7 +145,7 @@ def has_nouns(string)
 end
 
 def has_verbs(string)
-  string = string.split(" ").map { |w| "to " + w }.join(" ")
+  string = string.split.map { |w| "to " + w }.join(" ")
   tgr = EngTagger.new
   tagged = tgr.add_tags(string)
   !tgr.get_verbs(tagged).empty?
@@ -122,14 +164,13 @@ def has_adverbs(string)
 end
 
 
+#p parse_pos_tags("should I stay or should I go")
+
 # p detect_pos(["Should I go", "swim"])
-# p nlp_parse("one or two or three")
+ p nlp_parse("should we go right away or should I call first?")
 # p nlp_parse("nice salary or bad treatment")
-p nlp_parse("should i stay or should i go?")
-
-
-
-# p parse("Who's the better president: Putin or Trump?")
+# p nlp_parse("take it or leave it?")
+# p nlp_parse("apples or red oranges?")
 # p parse("Should I stay or should I go?")
 # p parse ("Should I have candy or steak for breakfast?")
 # tgr = EngTagger.new
