@@ -4,7 +4,7 @@ require 'nori'
 def parse_pos_tags(string)
   tgr = EngTagger.new
   prs = Nori.new
-  tagged = tgr.add_tags(string)
+  p tagged = tgr.add_tags(string)
   result = {}
   tagged.split.each do |word|
     parsed = prs.parse(word)
@@ -39,7 +39,7 @@ end
 def normalize(string)
   alphanum = string.gsub(/[^0-9a-z ]/i, '')
   arr = alphanum.split
-  arr[0] = arr.first.downcase
+  arr[0] = arr.first.downcase if arr.first != 'I'
   arr.join(" ")
 end
 
@@ -164,10 +164,11 @@ def has_adverbs(string)
 end
 
 
-#p parse_pos_tags("should I stay or should I go")
+# p parse_pos_tags("should I stay or should I go")
+# p parse_pos_tags("Should I stay in journalism or become a writer?")
 
 # p detect_pos(["Should I go", "swim"])
- p nlp_parse("should we go right away or should I call first?")
+ p nlp_parse("I can either leave her or marry her?")
 # p nlp_parse("nice salary or bad treatment")
 # p nlp_parse("take it or leave it?")
 # p nlp_parse("apples or red oranges?")
