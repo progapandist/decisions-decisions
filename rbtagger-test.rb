@@ -8,13 +8,20 @@ tagger = Brill::Tagger.new
 # WORKS! TODO: SPLIT IN TWO METHODS? (detect_modals, invert_modals)
 
 def detect_modal_question(rbtagged)
-  rbtagged.map { |tagged| tagged.last }.join(' ').match(/MD (PRP|NN.{1}) VB/) != false
+  !rbtagged.map { |tagged| tagged.last }.join(' ').match(/MD (PRP|NN.*) VB.*/).nil?
 end
+
+# WIP
+def detect_inverted_question(rbtagged)
+  !rbtagged.map { |tagged| tagged.last }.join(' ').match(/VB.* (PRP|NN.*)/).nil?
+end
+
+p detect_inverted_question(tagger.tag("try me"))
 
 def invert_modals(rbtagged)
   rs = [] # result
   rbtagged.each do |tagged|
-    rs << tagged.first if !tagged.last.match(/\)/) # weird ")" that rbtagger generates
+    rs << tagged.first if !tagged.last.match(/\)/) # weird ")" that rbtagger generates. strip it elswhere
   end
   rs[0], rs[1], rs[2] = rs[1], rs[0], rs[2]
   # Change pronoun
@@ -39,7 +46,7 @@ def extract_noun_phrase(rbtagged)
   return result.reverse.map { |tagged| tagged.first }
 end
 
-modals = tagger.tag("I kiss a beautiful woman")
+modals = tagger.tag("should I have been trying")
 p invert_modals(modals) if detect_modal_question(modals)
 
 extract_noun_phrase(tagger.tag("see a good old movie"))
