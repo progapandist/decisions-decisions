@@ -4,20 +4,19 @@ tagger = Brill::Tagger.new
 
 # ALL METHODS WORK ON _PART_ OF SENTENCE (i.e. separated by 'or')
 
-# Determines if phrase starts with modal + prep + verb structure and reverses it
-# WORKS! TODO: SPLIT IN TWO METHODS? (detect_modals, invert_modals)
-
+# Determines if phrase starts with modal + prep + verb structure
 def detect_modal_question(rbtagged)
   !rbtagged.map { |tagged| tagged.last }.join(' ').match(/MD (PRP|NN.*) VB.*/).nil?
 end
 
 # WIP
-def detect_inverted_question(rbtagged)
-  !rbtagged.map { |tagged| tagged.last }.join(' ').match(/VB.* (PRP|NN.*)/).nil?
+def detect_yes_no_question(rbtagged)
+  !rbtagged.map { |tagged| tagged.last }.join(' ').match(/VB.* (PRP|NN.*) VB.*/ ).nil?
 end
 
 p detect_inverted_question(tagger.tag("try me"))
 
+# Reverses modal + prep + verb structure
 def invert_modals(rbtagged)
   rs = [] # result
   rbtagged.each do |tagged|
