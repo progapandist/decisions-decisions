@@ -39,7 +39,7 @@ def extract_noun_phrase(rbtagged)
   return result.reverse.map { |tagged| tagged.first }
 end
 
-modals = tagger.tag("should I kiss a beautiful woman")
+modals = tagger.tag("I kiss a beautiful woman")
 p invert_modals(modals) if detect_modal_question(modals)
 
 extract_noun_phrase(tagger.tag("see a good old movie"))
