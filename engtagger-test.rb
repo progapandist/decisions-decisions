@@ -37,7 +37,7 @@ def naive_parse(string)
 end
 
 def normalize(string)
-  alphanum = string.gsub(/[^0-9a-z ]/i, '')
+  alphanum = string.gsub(/[^0-9a-z\: ]/i, '')
   arr = alphanum.split
   arr[0] = arr.first.downcase if arr.first != 'I'
   arr.join(" ")

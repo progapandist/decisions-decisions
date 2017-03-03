@@ -9,28 +9,30 @@ def detect_modal_question(rbtagged)
   !rbtagged.map { |tagged| tagged.last }.join(' ').match(/MD (PRP|NN.*) VB.*/).nil?
 end
 
-# WIP
+# Detects if the inversion signals a yes/no question
+# TODO: Needs some work to filter out imperative statements 
 def detect_yes_no_question(rbtagged)
-  !rbtagged.map { |tagged| tagged.last }.join(' ').match(/VB.* (PRP|NN.*) VB.*/ ).nil?
+  !rbtagged.map { |tagged| tagged.last }.join(' ').match(/(MD|VB.*) (PRP|NN.*) (VB.*|NN.*|JJ|DT)/ ).nil?
 end
 
-p detect_inverted_question(tagger.tag("try me"))
+p detect_yes_no_question(tagger.tag("is he a good teacher"))
 
-# Reverses modal + prep + verb structure
+# Reverses "modal + prep + verb" structure
 def invert_modals(rbtagged)
   rs = [] # result
   rbtagged.each do |tagged|
     rs << tagged.first if !tagged.last.match(/\)/) # weird ")" that rbtagger generates. strip it elswhere
   end
-  rs[0], rs[1], rs[2] = rs[1], rs[0], rs[2]
-  # Change pronoun
-  if %w(I me we).include?(rs[0])
+  rs[0], rs[1] = rs[1], rs[0]
+  # Change to second person
+  if %w(I me we us).include?(rs[0])
     rs[0] = 'you'
   end
   rs
 end
 
 
+# Extracts meaningful words which follow a noun (extra nouns should be stripped)
 def extract_noun_phrase(rbtagged)
   result = []
   up_to_noun = []
@@ -45,7 +47,7 @@ def extract_noun_phrase(rbtagged)
   return result.reverse.map { |tagged| tagged.first }
 end
 
-modals = tagger.tag("should I have been trying")
+modals = tagger.tag("should I stay at home and study")
 p invert_modals(modals) if detect_modal_question(modals)
 
-extract_noun_phrase(tagger.tag("see a good old movie"))
+# p extract_noun_phrase(tagger.tag("stay at home"))
