@@ -50,8 +50,12 @@ end
 
 
 describe "Initial verb matching" do
-  it 'correctly attaches verb structures to parts starting with a verb' do
+  it 'attaches initial sequences while avoiding conflict with single verbs' do
     expect(match_initial_verbs(["you should stay", "go"], tagger)).to eq(["you should stay", "you should go"])
+  end
+
+  it 'attaches longer initial sequences while avoiding conflict with single verbs' do
+    expect(match_initial_verbs(["you should have been staying", "going"], tagger)).to eq(["you should have been staying", "you should have been going"])
   end
 end
 

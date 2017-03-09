@@ -91,8 +91,6 @@ require_relative 'my_tagger'
     rs.join(" ")
   end
 
-  # TODO: NEEDS WORK!
-
   # ["you should stay", "go"] => ["you should stay", "you should go"]
   # takes an array of strings, assumes they're all in indicative mood
   def match_initial_verbs(arr, tagger)
@@ -109,10 +107,10 @@ require_relative 'my_tagger'
       end
     end
     tagged_arr.each do |tagged|
-      if !simple_indicative_clause?(tagged)
+      if starts_with_verb?(tagged)
+        result << initial_verbs.split[0..-2].join(" ") + " " + tagged.map { |t| t.first }.join(" ")
+      elsif !simple_indicative_clause?(tagged)
         result << initial_verbs + tagged.map { |t| t.first }.join(" ")
-      elsif starts_with_verb?(tagged)
-        result << initial_verbs.split.drop(1).join(" ") + tagged.map { |t| t.first }.join(" ")
       else
         result << tagged.map { |t| t.first }.join(" ")
       end
@@ -127,8 +125,6 @@ require_relative 'my_tagger'
   def starts_with_verb?(rbtagged)
     rbtagged.first.last =~ /VB.*/
   end
-
-  #p Decisions::match_initial_verbs(["you should take it", "leave"], tagger)
 
   # Detects interrogative mood with auxiliary verbs
   # e.g. "Do I stay?", "Has he decided?"
