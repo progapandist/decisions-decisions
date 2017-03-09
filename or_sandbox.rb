@@ -1,4 +1,4 @@
-require 'rbtagger'
+require_relative 'my_tagger'
 
   # PREFER BRILL TAGGER?
 
@@ -14,9 +14,6 @@ require 'rbtagger'
   # 2. Test if it's the simplest case: i.e. number of words is number of 'or's +1
   #   — If that's the case — split into array and randomly choose one
   #   - If not: process further
-
-  tagger = MyTagger.new # This is our tagger
-
 
   def normalize(string)
     alphanum = string.gsub(/[^0-9a-z\: ]/i, '')
@@ -64,7 +61,6 @@ require 'rbtagger'
     end
     # Split at or and process both parts
     split_at_or(normalized).map do |part|
-      # we need  to remove an empty array inserted by rbtagger
       tagged = tagger.tag(part)
       if modal_question?(tagged)
         choices << invert_modals(tagged)
@@ -99,7 +95,6 @@ require 'rbtagger'
 
   # ["you should stay", "go"] => ["you should stay", "you should go"]
   # takes an array of strings, assumes they're all in indicative mood
-  # TODO: ["you should pick this", "that"] => ["you should pick this", "you should pick that"]
   def match_initial_verbs(arr, tagger)
     initial_verbs = ""
     result = []
@@ -107,12 +102,17 @@ require 'rbtagger'
     tagged_arr.each do |tagged|
       # TODO: Account for more than two verbs in a row ("must have been")
       if simple_indicative_clause?(tagged)
-        initial_verbs = tagged.map { |t| t.first }.take(2).join(" ") + " "
+        initial_verbs += tagged.first.first
+        initial_verbs += " "
+        initial_verbs += tagged.map { |t| t.first if t.last =~ /(MD|VB.*)/ }.compact.join(" ")
+        initial_verbs += " "
       end
     end
     tagged_arr.each do |tagged|
       if !simple_indicative_clause?(tagged)
         result << initial_verbs + tagged.map { |t| t.first }.join(" ")
+      elsif starts_with_verb?(tagged)
+        result << initial_verbs.split.drop(1).join(" ") + tagged.map { |t| t.first }.join(" ")
       else
         result << tagged.map { |t| t.first }.join(" ")
       end
@@ -122,6 +122,10 @@ require 'rbtagger'
 
   def simple_indicative_clause?(rbtagged)
     rbtagged.map { |t| t.last }.join(' ').match(/(PRP|NN.*) (MD|VB.*)/)
+  end
+
+  def starts_with_verb?(rbtagged)
+    rbtagged.first.last =~ /VB.*/
   end
 
   #p Decisions::match_initial_verbs(["you should take it", "leave"], tagger)
@@ -134,20 +138,3 @@ require 'rbtagger'
   # Changes to indicative mood by removing auxiliary verb and adding "s" to 3rd person
   def handle_interrogative_aux
   end
-
-p handle_or_question("Should I pick this movie or that movie?", tagger)
-
-p handle_or_question("Am I sick or am I ok?", tagger)
-p handle_or_question("Are you sick or still fine?", tagger)
-p handle_or_question("Is she beautiful or what?", tagger)
-p handle_or_question("Is she nuts or what?", tagger)
-p handle_or_question("Is Ann sick or is she fine?", tagger)
-p handle_or_question("Should I go out or am I sick?", tagger)
-p handle_or_question("Should I stay or should I go?", tagger)
-p handle_or_question("Should I stay or go?", tagger)
-p handle_or_question("Should I stay or is it fine to go?", tagger)
-p handle_or_question("Should I take it or leave it?", tagger)
-p handle_or_question("Do I stay or do I go?", tagger)
-p handle_or_question("Does he wish me harm or does he love me?", tagger)
-p handle_or_question("Is he a good man or a bad man?", tagger)
-p handle_or_question("Heads or tails?", tagger)
