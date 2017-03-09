@@ -10,7 +10,7 @@ require_relative 'my_tagger'
 # If there are more than three sentences, ask the user to be more concise.
 # Find a first sentence that contains "ORs" and work with it.
 # 1. Normalize: remove punctuation from input and decapitalize the first letter
-# (if this letter is not I)
+# (if this letter is not I). TODO: REMOVE DOUBLE SPACES
 # 2. Test if it's the simplest case: i.e. number of words is number of 'or's +1
 #   — If that's the case — split into array and randomly choose one
 #   - If not: process further
@@ -120,7 +120,7 @@ end
 
 
 def simple_indicative_clause?(rbtagged)
-  rbtagged.map { |t| t.last }.join(' ').match(/(PRP|NN.*) (MD|VB.*)/)
+  rbtagged.take(2).map { |t| t.last }.join(' ').match(/(PRP|NN.*) (MD|VB.*)/)
 end
 
 def starts_with_verb?(rbtagged)
@@ -129,12 +129,19 @@ end
 
 # Detects interrogative mood with auxiliary verbs
 # e.g. "Do I stay?", "Has he decided?"
-def interrogative_aux? # VBZ, VBP
+def interrogative_aux?(rbtagged) # VBZ, VBP
+  rbtagged.take(3).map { |t| t.last }.join(' ').match(/(VBZ|VBP) (PRP|NN.*) (VB.*)/)
 end
 
+# TODO: use https://github.com/rossmeissl/verbs and/or https://deveiate.org/code/linguistics/Linguistics/EN.html to conjugate verbs ??
 # Changes to indicative mood by removing auxiliary verb and adding "s" to 3rd person
-def handle_interrogative_aux
+# "does he stay" => "he stays"
+# "did he stay" => "he stayed"
+def handle_interrogative_aux(rbtagged)
+  # FALSE IMPLEMENTATION! 
+  no_auxiliary = rbtagged.drop(1)
+  res = no_auxiliary.map { |t| t.first }
+  res[0] = 'you' if %w(I i me we us).include?(res[0])
+  res[0], res[1] = res[1], res[0]
+  res.join(" ")
 end
-
-
-p match_initial_verbs(["do I stay", "do I go"], MyTagger.new)

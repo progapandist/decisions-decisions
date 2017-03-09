@@ -5,9 +5,25 @@ tagger = MyTagger.new
 
 
 describe "Helpers" do
+
+  let(:do_phrase) { tagger.tag("do I stay") }
+  let(:have_phrase) { tagger.tag("has Jack been drinking") }
+  let(:wrong_phrase) { tagger.tag("you knew") }
+
   it 'detect that phrase starts with a verb' do
     phrase = tagger.tag("go home")
     expect(starts_with_verb?(phrase)).to be_truthy
+  end
+
+  it 'detects interrogation with auxiliary verbs' do
+    expect(interrogative_aux?(do_phrase)).to be_truthy
+    expect(interrogative_aux?(have_phrase)).to be_truthy
+    expect(interrogative_aux?(wrong_phrase)).to be_falsy
+  end
+
+  it 'removes auxiliary verb and reverses interrogation' do
+    expect(handle_interrogative_aux(do_phrase)).to eq("you do stay")
+    expect(handle_interrogative_aux(have_phrase)).to eq("you stay")
   end
 end
 
@@ -76,7 +92,7 @@ describe "Handling or questions" do
       expect(handle_or_question("do I stay or do I go", tagger)).to eq(["you do stay", "you do go"])
     end
   end
-  
+
   context 'with an interrogative verb + adjective' do
     it 'with verb present in all parts' do
       expect(handle_or_question("is she beautiful or is she ugly", tagger)).to eq(["she is beautiful", "she is ugly"])
