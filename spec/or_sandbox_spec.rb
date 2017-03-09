@@ -40,6 +40,10 @@ describe "Initial verb matching" do
   it 'attaches longer initial sequences while avoiding conflict with single verbs' do
     expect(match_initial_verbs(["you should have been staying", "going"], tagger)).to eq(["you should have been staying", "you should have been going"])
   end
+
+  it 'handles non-modal verb structures' do
+    expect(match_initial_verbs(["you have been staying", "going"], tagger)).to eq(["you have been staying", "you have been going"])
+  end
 end
 
 describe "Handling or questions" do
@@ -49,7 +53,7 @@ describe "Handling or questions" do
     it 'Should I stay or not'
   end
 
-  context "with modal structures" do
+  context "with modal clauses" do
     it 'with two simple modals' do
       expect(handle_or_question("should I stay or may he go", tagger)).to eq(["you should stay", "he may go"])
     end
@@ -67,7 +71,12 @@ describe "Handling or questions" do
     end
   end
 
-
+  context "with non-modal clauses" do
+    it "'do I?' questions" do
+      expect(handle_or_question("do I stay or do I go", tagger)).to eq(["you do stay", "you do go"])
+    end
+  end
+  
   context 'with an interrogative verb + adjective' do
     it 'with verb present in all parts' do
       expect(handle_or_question("is she beautiful or is she ugly", tagger)).to eq(["she is beautiful", "she is ugly"])
