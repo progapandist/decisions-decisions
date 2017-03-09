@@ -32,23 +32,6 @@ describe 'Handling interrogative structures with adjectives' do
   end
 end
 
-
-# p handle_or_question("Am I sick or am I ok?", tagger)
-# p handle_or_question("Are you sick or still fine?", tagger)
-# p handle_or_question("Is she beautiful or what?", tagger)
-# p handle_or_question("Is she nuts or what?", tagger)
-# p handle_or_question("Is Ann sick or is she fine?", tagger)
-# p handle_or_question("Should I go out or am I sick?", tagger)
-# p handle_or_question("Should I stay or should I go?", tagger)
-# p handle_or_question("Should I stay or go?", tagger)
-# p handle_or_question("Should I stay or is it fine to go?", tagger)
-# p handle_or_question("Should I take it or leave it?", tagger)
-# p handle_or_question("Do I stay or do I go?", tagger)
-# p handle_or_question("Does he wish me harm or does he love me?", tagger)
-# p handle_or_question("Is he a good man or a bad man?", tagger)
-# p handle_or_question("Heads or tails?", tagger)
-
-
 describe "Initial verb matching" do
   it 'attaches initial sequences while avoiding conflict with single verbs' do
     expect(match_initial_verbs(["you should stay", "go"], tagger)).to eq(["you should stay", "you should go"])
