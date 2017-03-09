@@ -10,7 +10,7 @@ def detect_modal_question(rbtagged)
 end
 
 # Detects if the inversion signals a yes/no question
-# TODO: Needs some work to filter out imperative statements 
+# TODO: Needs some work to filter out imperative statements
 def detect_yes_no_question(rbtagged)
   !rbtagged.map { |tagged| tagged.last }.join(' ').match(/(MD|VB.*) (PRP|NN.*) (VB.*|NN.*|JJ|DT)/ ).nil?
 end

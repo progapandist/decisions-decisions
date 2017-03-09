@@ -15,7 +15,8 @@ require 'rbtagger'
   #   — If that's the case — split into array and randomly choose one
   #   - If not: process further
 
-  tagger = Brill::Tagger.new # This is our tagger
+  tagger = MyTagger.new # This is our tagger
+
 
   def normalize(string)
     alphanum = string.gsub(/[^0-9a-z\: ]/i, '')
@@ -63,8 +64,8 @@ require 'rbtagger'
     end
     # Split at or and process both parts
     split_at_or(normalized).map do |part|
-      # we need .drop(1) to remove an empty array inserted by rbtagger
-      tagged = tagger.tag(part).drop(1)
+      # we need  to remove an empty array inserted by rbtagger
+      tagged = tagger.tag(part)
       if modal_question?(tagged)
         choices << invert_modals(tagged)
       elsif interrogative_adj?(tagged)
@@ -102,18 +103,15 @@ require 'rbtagger'
   def match_initial_verbs(arr, tagger)
     initial_verbs = ""
     result = []
-    # we need .drop(1) to remove an empty array inserted by rbtagger
-    tagged_arr = arr.map { |string| tagger.tag(string).drop(1) }
+    tagged_arr = arr.map { |string| tagger.tag(string) }
     tagged_arr.each do |tagged|
       # TODO: Account for more than two verbs in a row ("must have been")
-      if extended_indicative_clause?(tagged)
-        initial_verbs = tagged.map { |t| t.first }.take(3).join(" ") + " "
-      elsif simple_indicative_clause?(tagged)
+      if simple_indicative_clause?(tagged)
         initial_verbs = tagged.map { |t| t.first }.take(2).join(" ") + " "
       end
     end
     tagged_arr.each do |tagged|
-      if !simple_indicative_clause?(tagged) && !extended_indicative_clause?(tagged) && !starts_with_verb?(tagged)
+      if !simple_indicative_clause?(tagged)
         result << initial_verbs + tagged.map { |t| t.first }.join(" ")
       else
         result << tagged.map { |t| t.first }.join(" ")
@@ -122,17 +120,8 @@ require 'rbtagger'
     result
   end
 
-  def starts_with_verb?(rbtagged)
-    rbtagged.map { |t| t.last }.first.match(/VB.*/)
-  end
-
   def simple_indicative_clause?(rbtagged)
     rbtagged.map { |t| t.last }.join(' ').match(/(PRP|NN.*) (MD|VB.*)/)
-  end
-
-  # TODO: DOESN'T WORK!
-  def extended_indicative_clause?(rbtagged)
-    rbtagged.map { |t| t.last }.join(' ').match(/(PRP|NN.*) (MD|VB.*) (VB.* )+(PRP|DT|NN.*)/)
   end
 
   #p Decisions::match_initial_verbs(["you should take it", "leave"], tagger)
