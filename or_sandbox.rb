@@ -1,10 +1,7 @@
 require_relative 'my_tagger'
+require 'linguistics'
+require 'verbs'
 
-# PREFER BRILL TAGGER?
-
-# DETERMINE MODALS AND INVERT THEM: Should I stay -> you should stay
-
-# We have an "OR"
 
 # Sanity check: detect if language is English. Use segmenter to find sentences.
 # If there are more than three sentences, ask the user to be more concise.
@@ -98,7 +95,6 @@ def match_initial_verbs(arr, tagger)
   result = []
   tagged_arr = arr.map { |string| tagger.tag(string) }
   tagged_arr.each do |tagged|
-    # TODO: Account for more than two verbs in a row ("must have been")
     if simple_indicative_clause?(tagged)
       initial_verbs += tagged.first.first
       initial_verbs += " "
@@ -136,12 +132,42 @@ end
 # TODO: use https://github.com/rossmeissl/verbs and/or https://deveiate.org/code/linguistics/Linguistics/EN.html to conjugate verbs ??
 # Changes to indicative mood by removing auxiliary verb and adding "s" to 3rd person
 # "does he stay" => "he stays"
+# "was he working" => "he was working"
+# "has he been" => "he has been"
 # "did he stay" => "he stayed"
 def handle_interrogative_aux(rbtagged)
-  # FALSE IMPLEMENTATION! 
-  no_auxiliary = rbtagged.drop(1)
-  res = no_auxiliary.map { |t| t.first }
-  res[0] = 'you' if %w(I i me we us).include?(res[0])
-  res[0], res[1] = res[1], res[0]
-  res.join(" ")
+  verbs = rbtagged.select { |t| t.last =~ /VB.*/  }
+  auxiliary = verbs.first.first
+  main_verb = verbs.last.first
+  infinitive = find_infinitive(main_verb)
+  subj = rbtagged.select { |t| t.last =~ /(PRP|NN.*)/  }.first.first
+
+  person = :third
+  case subj
+  when "I", "i", "me", "we", "us"
+    person = :first
+  when "you"
+    person = :second
+  end
+
+  tense = :present
+  aspect = :habitual
+  if %w(did had was were).include?(auxiliary)
+    tense = :past
+    aspect = :perfective
+  end
+
+  infinitive.verb.conjugate(subject: subj, tense: tense, aspect: aspect, person: person)
 end
+
+def find_infinitive(verb)
+  Linguistics.use( :en )
+  infinitive = verb.en.infinitive.to_s # make it a String again
+  return verb if infinitive == ""
+  # quick and dirty fix for strange Linguistics bug when "e" is not removed from the verb
+  # on tense change
+  infinitive.chop! if infinitive[-2, 2] =~ /(a|o|u|i|e|y|w|k|y|d|g)e/i
+  infinitive
+end
+
+p handle_interrogative_aux(MyTagger.new.tag("did he ring"))

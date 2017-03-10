@@ -1,16 +1,24 @@
 require_relative '../or_sandbox'
 require_relative '../my_tagger'
+require 'linguistics'
+require 'verbs'
 
 tagger = MyTagger.new
 
 
-describe "Helpers" do
-
+describe "Detectors and transformators" do
   let(:do_phrase) { tagger.tag("do I stay") }
   let(:have_phrase) { tagger.tag("has Jack been drinking") }
   let(:wrong_phrase) { tagger.tag("you knew") }
+  let(:non_infinitives) { ["stayed", "left", "says", "did", "went", "borrowed"] }
 
-  it 'detect that phrase starts with a verb' do
+  it 'finds infinitives' do
+    expect(
+      non_infinitives.map { |v| find_infinitive(v) }
+    ).to eq(["stay", "leave", "say", "do", "go", "borrow"])
+  end
+
+  it 'detects that phrase starts with a verb' do
     phrase = tagger.tag("go home")
     expect(starts_with_verb?(phrase)).to be_truthy
   end
@@ -59,6 +67,10 @@ describe "Initial verb matching" do
 
   it 'handles non-modal verb structures' do
     expect(match_initial_verbs(["you have been staying", "going"], tagger)).to eq(["you have been staying", "you have been going"])
+  end
+
+  it 'matches verb phrases to parts with no verbs' do
+    expect(match_initial_verbs(["you should pick this", "that"], tagger)).to eq(["you should pick this", "you should pick that"])
   end
 end
 
